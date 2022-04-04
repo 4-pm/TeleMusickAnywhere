@@ -60,6 +60,19 @@ def main(message):
         bot.send_message(message.chat.id,
                          text="{0.first_name}, жду голосовой".format(message.from_user), reply_markup=markup)
 
+    elif (message.text == "Текст"):
+
+        users_step[message.from_user.id] = "text"
+
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(back_button)
+        bot.send_message(message.chat.id,
+                         text="{0.first_name}, Напиши название или часть текста песни(пока только название)".format(message.from_user),
+                         reply_markup=markup)
+
+    elif users_step[message.from_user.id] == "text":
+        send_mesage(message.chat.id, message.text)
+
     elif users_step[message.from_user.id] == "musick_add":
         users_step[message.from_user.id] = ["musick_add-image", message.text]
 
@@ -88,8 +101,15 @@ def doc(message):
         print("ok")
 
 
-def send_photo_file_id(chat_id, file_id):
-    requests.get(f'{URL}{__KEY__}/sendPhoto?chat_id={chat_id}&photo={file_id}')
+#def send_photo_file_id(chat_id, file_id):
+    #requests.get(f'{URL}{__KEY__}/sendPhoto?chat_id={chat_id}&photo={file_id}')
+
+def send_mesage(chat_id, name):
+    result = cur.execute(f"""SELECT qr, song FROM songs
+                            WHERE name = '{name}'""").fetchall()
+    result = result[0]
+    requests.get(f'{URL}{__KEY__}/sendPhoto?chat_id={chat_id}&photo={result[0]}&caption={name}')
+    requests.get(f"{URL}{__KEY__}/sendAudio?chat_id={chat_id}&audio={result[1]}")
 
 
 bot.polling(none_stop=True, interval=1)
