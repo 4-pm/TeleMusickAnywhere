@@ -3,14 +3,17 @@ import qrcode
 
 
 class QR_Operation():
-    def im_to_qr(image_name, qr_name):
+    def __init__():
+        pass
+
+    def im_to_qr(image_name='image_test.png', qr_name='qr.png'):
         im = Image.open(image_name)
         im2 = Image.open(qr_name)
         x, y = im2.size
         pixels_qr = im2.load()
         im = im.resize((x, y))
         pixels_im = im.load()
-        im.putalpha(170)
+        im.putalpha(115)
 
         for i in range(1, x - 1):
             for j in range(1, y - 1):
