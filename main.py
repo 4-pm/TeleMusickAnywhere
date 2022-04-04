@@ -1,6 +1,7 @@
 import telebot
 import requests
 import sqlite3
+from difflib import SequenceMatcher
 from telebot import types
 
 with open("API_KEY", "r") as f:
@@ -22,6 +23,9 @@ qr_button = types.KeyboardButton("QR код")
 
 @bot.message_handler(content_types=["text", "start"])
 def main(message):
+
+    if not message.from_user.id in users_step:
+        users_step[message.from_user.id] = "home"
 
     if (message.text == "/start" or message.text == "Назад"):
 
@@ -71,10 +75,12 @@ def main(message):
                          reply_markup=markup)
 
     elif users_step[message.from_user.id] == "text":
-        send_mesage(message.chat.id, message.text)
+        send_mesage(message.chat.id, message.text, message)
 
     elif users_step[message.from_user.id] == "musick_add":
         users_step[message.from_user.id] = ["musick_add-image", message.text]
+
+    print(users_step)
 
 
 
@@ -84,32 +90,54 @@ def main(message):
 @bot.message_handler(content_types=['photo'])
 def image(message):
     print(users_step, "image")
-    if users_step[message.from_user.id][0] == "musick_add-image":
-        file = message.photo[-1].file_id
-        users_step[message.from_user.id].append(str(file))
-        users_step[message.from_user.id][0] = "musick_add-file"
+    if message.from_user.id in users_step:
+        if users_step[message.from_user.id][0] == "musick_add-image":
+            file = message.photo[-1].file_id
+            users_step[message.from_user.id].append(str(file))
+            users_step[message.from_user.id][0] = "musick_add-file"
 
 @bot.message_handler(content_types=['audio'])
 def doc(message):
     print(users_step, "doc")
-    if users_step[message.from_user.id][0] == "musick_add-file":
-        file = str(message.audio.file_id)
-        cur.execute(f"""INSERT INTO songs VALUES('{users_step[message.from_user.id][2]}',
-                    '{users_step[message.from_user.id][1]}',
-                    '{file}', 'No text')""")
-        con.commit()
-        print("ok")
+    if message.from_user.id in users_step:
+        if users_step[message.from_user.id][0] == "musick_add-file":
+            file = str(message.audio.file_id)
+            cur.execute(f"""INSERT INTO songs VALUES('{users_step[message.from_user.id][2]}',
+                        '{users_step[message.from_user.id][1]}',
+                        '{file}', 'No text')""")
+            con.commit()
+            print("ok")
 
 
-#def send_photo_file_id(chat_id, file_id):
-    #requests.get(f'{URL}{__KEY__}/sendPhoto?chat_id={chat_id}&photo={file_id}')
-
-def send_mesage(chat_id, name):
+def send_mesage(chat_id, name, message):
     result = cur.execute(f"""SELECT qr, song FROM songs
                             WHERE name = '{name}'""").fetchall()
-    result = result[0]
-    requests.get(f'{URL}{__KEY__}/sendPhoto?chat_id={chat_id}&photo={result[0]}&caption={name}')
-    requests.get(f"{URL}{__KEY__}/sendAudio?chat_id={chat_id}&audio={result[1]}")
+    if result:
+        result = result[0]
+        requests.get(f'{URL}{__KEY__}/sendPhoto?chat_id={chat_id}&photo={result[0]}&caption={name}')
+        requests.get(f"{URL}{__KEY__}/sendAudio?chat_id={chat_id}&audio={result[1]}")
+    else:
+        song = ["", 0]
+        result = cur.execute(f"""SELECT text FROM songs""").fetchall()
+        print(result)
+        for i in result:
+            i = i[0]
+            s = SequenceMatcher(lambda x: x == " ", name, i)
+            s = s.ratio()
+            if s > song[1]:
+                song[1] = s
+                song[0] = i
+        print(song)
+        result = cur.execute(f"""SELECT qr, song, name FROM songs
+                                    WHERE text = '{song[0]}'""").fetchall()
+        if result:
+            result = result[0]
+            requests.get(f'{URL}{__KEY__}/sendPhoto?chat_id={chat_id}&photo={result[0]}&caption=Совпадение {round(song[1], 1) * 100}%, {result[2]}')
+            requests.get(f"{URL}{__KEY__}/sendAudio?chat_id={chat_id}&audio={result[1]}")
+        else:
+            bot.send_message(message.chat.id,
+                             text="Ничего не нашел(... Добавь эту песню нам в коллекцию".format(
+                                 message.from_user))
 
 
 bot.polling(none_stop=True, interval=1)
