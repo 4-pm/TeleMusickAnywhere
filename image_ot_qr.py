@@ -3,10 +3,10 @@ import qrcode
 
 
 class QR_Operation():
-    def __init__():
+    def __init__(self):
         pass
 
-    def im_to_qr(image_name='image_test.png', qr_name='qr.png'):
+    def im_to_qr(self, image_name='image_test.png', qr_name='qr.png'):
         im = Image.open(image_name)
         im2 = Image.open(qr_name)
         x, y = im2.size
@@ -34,7 +34,7 @@ class QR_Operation():
 
         im.save(f"qr_{image_name}")
 
-    def qr_incode(text, qr_name):
+    def qr_incode(self, text, qr_name):
         img = qrcode.make(text)
         img.save(qr_name)
 
