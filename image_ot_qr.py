@@ -1,5 +1,6 @@
 from PIL import Image, ImageFilter
 import qrcode
+import cv2 as cv
 
 
 class QR_Operation():
@@ -38,6 +39,15 @@ class QR_Operation():
         img = qrcode.make(text)
         img.save(qr_name)
 
+    def qr_decode(self, qr_name):
+        im = cv.imread(qr_name)
+        det = cv.QRCodeDetector()
 
-QR_Operation.qr_incode(input('Your text '), input('File name ')) #Указать расширение
-QR_Operation.im_to_qr(input('Image name '), input('Qr name ')) #Указать расширение
+        retval, points, straight_qrcode = det.detectAndDecode(im)
+        return retval
+
+
+#x = QR_Operation()
+#x.qr_incode(input('Your text '), input('File name ')) #Указать расширение
+#print(x.qr_decode(input('File name '))) #Указать расширение
+#x.im_to_qr(input('Image name '), input('Qr name ')) #Указать расширение
