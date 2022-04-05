@@ -20,6 +20,8 @@ speech = types.KeyboardButton("Голос")
 text = types.KeyboardButton("Текст")
 back_button = types.KeyboardButton("Назад")
 qr_button = types.KeyboardButton("QR код")
+rus = types.KeyboardButton("Русский")
+eng = types.KeyboardButton("Английский")
 
 @bot.message_handler(content_types=["text", "start"])
 def main(message):
@@ -60,9 +62,18 @@ def main(message):
         users_step[message.from_user.id] = "voice"
 
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(back_button, rus, eng)
+        bot.send_message(message.chat.id,
+                         text="{0.first_name}, выбери язык".format(message.from_user), reply_markup=markup)
+
+    elif (message.text == "Русский") or (message.text == "Английский"):
+
+        users_step[message.from_user.id] = message.text
+
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(back_button)
         bot.send_message(message.chat.id,
-                         text="{0.first_name}, жду голосовой".format(message.from_user), reply_markup=markup)
+                         text="Жду голосовую".format(message.from_user), reply_markup=markup)
 
     elif (message.text == "Текст"):
 
@@ -128,11 +139,13 @@ def doc(message):
 
 @bot.message_handler(content_types=['voice'])
 def voice(message):
-        if users_step[message.from_user.id] == "voice":
+        if users_step[message.from_user.id] == "Русский":
             # тут функция Эмиля
             bot.send_message(message.chat.id,
                              text="Эмиль еще разрабатывает".format(
                                  message.from_user))
+        elif users_step[message.from_user.id] == "Английский":
+            pass
 
 
 
