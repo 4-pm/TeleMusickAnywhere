@@ -74,6 +74,16 @@ def main(message):
                          text="{0.first_name}, Напиши название или часть текста песни(пока только название)".format(message.from_user),
                          reply_markup=markup)
 
+    elif (message.text == "QR код"):
+
+        users_step[message.from_user.id] = "qr"
+
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(back_button)
+        bot.send_message(message.chat.id,
+                         text="{0.first_name}, жду qr код".format(message.from_user),
+                         reply_markup=markup)
+
     elif users_step[message.from_user.id] == "text":
         send_mesage(message.chat.id, message.text, message)
 
@@ -95,6 +105,12 @@ def image(message):
             file = message.photo[-1].file_id
             users_step[message.from_user.id].append(str(file))
             users_step[message.from_user.id][0] = "musick_add-file"
+        elif users_step[message.from_user.id] == "qr":
+            # тут нужна функция Лени
+            bot.send_message(message.chat.id,
+                             text="Леня еще разрабатывает".format(
+                                 message.from_user))
+
 
 @bot.message_handler(content_types=['audio'])
 def doc(message):
@@ -106,7 +122,18 @@ def doc(message):
                         '{users_step[message.from_user.id][1]}',
                         '{file}', 'No text')""")
             con.commit()
-            print("ok")
+            bot.send_message(message.chat.id,
+                             text="Успешно добавлено".format(
+                                 message.from_user))
+
+@bot.message_handler(content_types=['voice'])
+def voice(message):
+        if users_step[message.from_user.id] == "voice":
+            # тут функция Эмиля
+            bot.send_message(message.chat.id,
+                             text="Эмиль еще разрабатывает".format(
+                                 message.from_user))
+
 
 
 def send_mesage(chat_id, name, message):
@@ -136,7 +163,7 @@ def send_mesage(chat_id, name, message):
             requests.get(f"{URL}{__KEY__}/sendAudio?chat_id={chat_id}&audio={result[1]}")
         else:
             bot.send_message(message.chat.id,
-                             text="Ничего не нашел(... Добавь эту песню нам в коллекцию".format(
+                             text="Ничего не нашлось... Добавь эту песню нам в коллекцию".format(
                                  message.from_user))
 
 
