@@ -4,12 +4,13 @@ import cv2 as cv
 
 
 class QR_Operation():
-    def __init__(self):
-        pass
+    def __init__(self, text='Pass', qr_name='qr'):
+        img = qrcode.make(text)
+        img.save(qr_name + '.png')
 
-    def im_to_qr(self, image_name='image_test.png', qr_name='qr.png'):
-        im = Image.open(image_name)
-        im2 = Image.open(qr_name)
+    def im_to_qr(self, image_name='image', qr_name='qr'):
+        im = Image.open(image_name + '.png')
+        im2 = Image.open(qr_name + '.png')
         x, y = im2.size
         pixels_qr = im2.load()
         im = im.resize((x, y))
@@ -20,34 +21,22 @@ class QR_Operation():
             for j in range(1, y - 1):
                 if pixels_qr[i, j] == 0:
                     pixels_im[i, j] = (0, 0, 0)
-                elif pixels_qr[i - 1, j] == 0:
-                    pixels_im[i, j] = (255, 255, 255)
-                elif pixels_qr[i - 1, j - 1] == 0:
-                    pixels_im[i, j] = (255, 255, 255)
-                elif pixels_qr[i, j - 1] == 0:
-                    pixels_im[i, j] = (255, 255, 255)
-                elif pixels_qr[i + 1, j + 1] == 0:
-                    pixels_im[i, j] = (255, 255, 255)
-                elif pixels_qr[i + 1, j] == 0:
-                    pixels_im[i, j] = (255, 255, 255)
-                elif pixels_qr[i, j + 1] == 0:
-                    pixels_im[i, j] = (255, 255, 255)
+                else:
+                    for p in range(-1, 2):
+                        for t in range(-1, 2):
+                            if pixels_qr[i + p, j + t] == 0:
+                                pixels_im[i, j] = (255, 255, 255)
 
-        im.save(f"qr_{image_name}")
+        im.save(f"qr_{image_name + '.png'}")
 
-    def qr_incode(self, text, qr_name):
-        img = qrcode.make(text)
-        img.save(qr_name)
-
-    def qr_decode(self, qr_name):
-        im = cv.imread(qr_name)
+    def qr_decode(self, qr_name='qr'):
+        im = cv.imread(qr_name + '.png')
         det = cv.QRCodeDetector()
 
         retval, points, straight_qrcode = det.detectAndDecode(im)
         return retval
 
 
-#x = QR_Operation()
-#x.qr_incode(input('Your text '), input('File name ')) #Указать расширение
-#print(x.qr_decode(input('File name '))) #Указать расширение
-#x.im_to_qr(input('Image name '), input('Qr name ')) #Указать расширение
+x = QR_Operation(input('Your text '), input('File name '))
+print(x.qr_decode(input('File name ')))
+x.im_to_qr(input('Image name '), input('Qr name '))
