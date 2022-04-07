@@ -2,6 +2,7 @@ import os
 import telebot
 import requests
 import speech_recognition as sr
+import subprocess
 import datetime
 
 
@@ -34,9 +35,10 @@ def get_audio_messages(message):
         with open(file_name, 'wb') as file:
             file.write(doc.content)
         directory = os.getcwd()
-        os.system(f'ffmpeg -i {directory}/{file_name} {directory}/{file_name[:-4]}.wav')
-
+        subprocess.call(
+            f'{directory}/bin/ffmpeg.exe -i {directory}/{file_name} {directory}/{file_name[:-4]}.wav')
         result = audio_to_text(file_name[:-4] + '.wav')
+        print(2)
         bot.send_message(message.from_user.id, format(result))
 
     except sr.UnknownValueError:
@@ -58,6 +60,7 @@ def get_audio_messages(message):
                 e) + '\n')
 
     finally:
+        pass
         os.remove(file_name[:-4] + '.wav')
         os.remove(file_name)
 
