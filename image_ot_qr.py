@@ -4,13 +4,16 @@ import cv2 as cv
 
 
 class QR_Operation():
-    def __init__(self, text='Pass', qr_name='qr'):
-        img = qrcode.make(text)
-        img.save(qr_name + '.png')
+    def __init__(self, qr_name):
+        self.qr_name = qr_name
 
-    def im_to_qr(self, image_name='image', qr_name='qr'):
+    def qr_coder(self, text='Pass'):
+        img = qrcode.make(text)
+        img.save(self.qr_name + '.png')
+
+    def im_to_qr(self, image_name='image'):
         im = Image.open(image_name + '.png')
-        im2 = Image.open(qr_name + '.png')
+        im2 = Image.open(self.qr_name + '.png')
         x, y = im2.size
         pixels_qr = im2.load()
         im = im.resize((x, y))
@@ -28,8 +31,8 @@ class QR_Operation():
                                 pixels_im[i, j] = (255, 255, 255)
         im.save(f"qr_{image_name + '.png'}")
 
-    def qr_decode(self, qr_name='qr'):
-        im = cv.imread(qr_name + '.png')
+    def qr_decode(self):
+        im = cv.imread(self.qr_name + '.png')
         det = cv.QRCodeDetector()
 
         retval, points, straight_qrcode = det.detectAndDecode(im)
@@ -52,9 +55,9 @@ class QR_Operation():
             loop=0
         )
 
-
+'''
 x = QR_Operation()
 x = QR_Operation(input('Your text '), input('File name '))
 print(x.qr_decode(input('File name ')))
 x.im_to_qr(input('Image name '), input('Qr name '))
-x.make_gif(input('Frame names '), int(input('Frame number ')))
+x.make_gif(input('Frame names '), int(input('Frame number ')))'''

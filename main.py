@@ -1,16 +1,22 @@
 import telebot
 import requests
 import sqlite3
+import os
 from difflib import SequenceMatcher
 from telebot import types
+from image_ot_qr import QR_Operation
+from data import db_session
+from data.songs import Song
+
 
 with open("API_KEY", "r") as f:
     __KEY__ = f.readline()
 
+db_session.global_init("db/musik.db")
 URL = "https://api.telegram.org/bot"
 bot = telebot.TeleBot(__KEY__)
-con = sqlite3.connect("db/music.db", check_same_thread=False)
-cur = con.cursor()
+#con = sqlite3.connect("db/music.db", check_same_thread=False)
+#cur = con.cursor()
 
 users_step = {}
 
@@ -117,9 +123,17 @@ def image(message):
             users_step[message.from_user.id].append(str(file))
             users_step[message.from_user.id][0] = "musick_add-file"
         elif users_step[message.from_user.id] == "qr":
-            # тут нужна функция Лени
+            file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            src = 'nontime_images/' + message.photo[1].file_id + ".png"
+            with open(src, 'wb') as new_file:
+                new_file.write(downloaded_file)
+            dec = QR_Operation("nontime_images/" + message.photo[1].file_id)
+            text_qr = dec.qr_decode()
+            os.remove("nontime_images/" + message.photo[1].file_id + ".png")
+            # Сюда нужен поиск по id
             bot.send_message(message.chat.id,
-                             text="Леня еще разрабатывает".format(
+                             text=text_qr.format(
                                  message.from_user))
 
 
@@ -129,10 +143,14 @@ def doc(message):
     if message.from_user.id in users_step:
         if users_step[message.from_user.id][0] == "musick_add-file":
             file = str(message.audio.file_id)
-            cur.execute(f"""INSERT INTO songs VALUES('{users_step[message.from_user.id][2]}',
-                        '{users_step[message.from_user.id][1]}',
-                        '{file}', 'No text')""")
-            con.commit()
+            mus = Song()
+            mus.name = users_step[message.from_user.id][1]
+            mus.image = users_step[message.from_user.id][2]
+            mus.song = file
+            mus.text = "Саша по шоссе"
+            db_sess = db_session.create_session()
+            db_sess.add(mus)
+            db_sess.commit()
             bot.send_message(message.chat.id,
                              text="Успешно добавлено".format(
                                  message.from_user))
@@ -150,16 +168,15 @@ def voice(message):
 
 
 def send_mesage(chat_id, name, message):
-    result = cur.execute(f"""SELECT qr, song FROM songs
-                            WHERE name = '{name}'""").fetchall()
+    db_sess = db_session.create_session()
+    result = list(db_sess.query(Song.image, Song.song).filter(Song.name == name).distinct())
     if result:
         result = result[0]
         requests.get(f'{URL}{__KEY__}/sendPhoto?chat_id={chat_id}&photo={result[0]}&caption={name}')
         requests.get(f"{URL}{__KEY__}/sendAudio?chat_id={chat_id}&audio={result[1]}")
     else:
         song = ["", 0]
-        result = cur.execute(f"""SELECT text FROM songs""").fetchall()
-        print(result)
+        result = list(db_sess.query(Song.text).distinct())
         for i in result:
             i = i[0]
             s = SequenceMatcher(lambda x: x == " ", name, i)
@@ -168,8 +185,7 @@ def send_mesage(chat_id, name, message):
                 song[1] = s
                 song[0] = i
         print(song)
-        result = cur.execute(f"""SELECT qr, song, name FROM songs
-                                    WHERE text = '{song[0]}'""").fetchall()
+        result = list(db_sess.query(Song.image, Song.song, Song.name).filter(Song.text == song[0]).distinct())
         if result:
             result = result[0]
             requests.get(f'{URL}{__KEY__}/sendPhoto?chat_id={chat_id}&photo={result[0]}&caption=Совпадение {round(song[1], 1) * 100}%, {result[2]}')
