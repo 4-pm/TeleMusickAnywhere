@@ -27,13 +27,16 @@ def audio_to_text(dest_name: str):
 def get_audio_messages(message):
     try:
         print("Started recognition...")
+        #  это скачивание
+        #  начало
         file_info = bot.get_file(message.voice.file_id)
         path = file_info.file_path
-        file_name = os.path.basename(path)
+        file_name = os.path.basename(path)  # имя файла
 
         doc = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(__KEY__, file_info.file_path))
         with open(file_name, 'wb') as file:
             file.write(doc.content)
+        #  конец
         directory = os.getcwd()
         subprocess.call(
             f'{directory}/bin/ffmpeg.exe -i {directory}/{file_name} {directory}/{file_name[:-4]}.wav')
