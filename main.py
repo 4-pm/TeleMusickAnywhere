@@ -5,6 +5,7 @@ import os
 from difflib import SequenceMatcher
 from telebot import types
 from image_ot_qr import QR_Operation
+from Speech_rec import Recognition
 from data import db_session
 from data.songs import Song
 
@@ -15,8 +16,6 @@ with open("API_KEY", "r") as f:
 db_session.global_init("db/musik.db")
 URL = "https://api.telegram.org/bot"
 bot = telebot.TeleBot(__KEY__)
-#con = sqlite3.connect("db/music.db", check_same_thread=False)
-#cur = con.cursor()
 
 users_step = {}
 
@@ -75,7 +74,6 @@ def main(message):
     elif (message.text == "Русский") or (message.text == "Английский"):
 
         users_step[message.from_user.id] = message.text
-
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(back_button)
         bot.send_message(message.chat.id,
@@ -102,16 +100,12 @@ def main(message):
                          reply_markup=markup)
 
     elif users_step[message.from_user.id] == "text":
-        send_mesage(message.chat.id, message.text, message)
+        send_message(message.chat.id, message.text, message)
 
     elif users_step[message.from_user.id] == "musick_add":
         users_step[message.from_user.id] = ["musick_add-image", message.text]
 
     print(users_step)
-
-
-
-
 
 
 @bot.message_handler(content_types=['photo'])
@@ -125,12 +119,12 @@ def image(message):
         elif users_step[message.from_user.id] == "qr":
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            src = 'nontime_images/' + message.photo[1].file_id + ".png"
+            src = 'nontime/' + message.photo[1].file_id + ".png"
             with open(src, 'wb') as new_file:
                 new_file.write(downloaded_file)
-            dec = QR_Operation("nontime_images/" + message.photo[1].file_id)
+            dec = QR_Operation("nontime/" + message.photo[1].file_id)
             text_qr = dec.qr_decode()
-            os.remove("nontime_images/" + message.photo[1].file_id + ".png")
+            os.remove("nontime/" + message.photo[1].file_id + ".png")
             # Сюда нужен поиск по id
             bot.send_message(message.chat.id,
                              text=text_qr.format(
@@ -158,16 +152,24 @@ def doc(message):
 @bot.message_handler(content_types=['voice'])
 def voice(message):
         if users_step[message.from_user.id] == "Русский":
-            # тут функция Эмиля
-            bot.send_message(message.chat.id,
-                             text="Эмиль еще разрабатывает".format(
-                                 message.from_user))
+            to_speech("ru_RU", message)
         elif users_step[message.from_user.id] == "Английский":
-            pass
+            to_speech("eng_ENG", message)
 
 
+def to_speech(lang, message):
+    filename = str(message.from_user.id)
+    file_name_full = "nontime/" + filename + ".ogg"
+    file_info = bot.get_file(message.voice.file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+    with open(file_name_full, 'wb') as new_file:
+        new_file.write(downloaded_file)
+    voicer = Recognition(file_name_full, lang)
+    voicer = voicer.get_audio_messages()
+    send_message(message.chat.id, voicer, message)
 
-def send_mesage(chat_id, name, message):
+
+def send_message(chat_id, name, message):
     db_sess = db_session.create_session()
     result = list(db_sess.query(Song.image, Song.song).filter(Song.name == name).distinct())
     if result:
