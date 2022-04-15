@@ -7,6 +7,8 @@ SqlAlchemyBase = dec.declarative_base()
 
 __factory = None
 
+
+# этот файл трогать не надо, стандартный шаблон
 def global_init(db_file):
     global __factory
 
