@@ -7,44 +7,44 @@ class QR_Operation():
     def __init__(self, qr_name):
         self.qr_name = qr_name
 
-    def qr_coder(self, text='Pass'):
-        img = qrcode.make(text)
-        img.save(self.qr_name + '.png')
+    def qr_coder(self, text='Pass'): # Никита, что будет здесь? Название или текст?
+        img = qrcode.make(text) # при помощи библиотеки qrcode делаем qr из введённого текста
+        img.save(self.qr_name + '.png') # сохраняем
 
     def im_to_qr(self, image_name='image'):
-        im = Image.open(image_name + '.png')
-        im2 = Image.open(self.qr_name + '.png')
-        x, y = im2.size
-        pixels_qr = im2.load()
-        im = im.resize((x, y))
-        pixels_im = im.load()
-        im.putalpha(115)
+        im = Image.open(image_name + '.png') # открываем фоновое изображение(предлагаю изображение, привязанное к пользователю)
+        im2 = Image.open(self.qr_name + '.png') # открываем qr
+        x, y = im2.size # получаем размер qr для ресайза изображения пользователя
+        pixels_qr = im2.load() # получаем список пикселей изображения
+        im = im.resize((x, y)) # приводим изображение к одному размеру с qr
+        pixels_im = im.load() # получаем список пикселей изображения
+        im.putalpha(115) # меняем прозрачность изображения для черных фотографий, иначе qr будет нечитаем
 
-        for i in range(1, x - 1):
+        for i in range(1, x - 1): # проходим циклом по изображению пользователя
             for j in range(1, y - 1):
                 if pixels_qr[i, j] == 0:
-                    pixels_im[i, j] = (0, 0, 0)
+                    pixels_im[i, j] = (0, 0, 0) # перерисовываем черные пиксели c qr на изображение пользователя
                 else:
                     for p in range(-1, 2):
                         for t in range(-1, 2):
                             if pixels_qr[i + p, j + t] == 0:
-                                pixels_im[i, j] = (255, 255, 255)
-        im.save(f"qr_{image_name + '.png'}")
+                                pixels_im[i, j] = (255, 255, 255) # делаем окантовку вокруг черных пикселей qr
+        im.save(f"qr_{image_name + '.png'}") # сохраняем
 
     def qr_decode(self):
-        im = cv.imread(self.qr_name + '.png')
+        im = cv.imread(self.qr_name + '.png') # читаем qr
         det = cv.QRCodeDetector()
 
-        retval, points, straight_qrcode = det.detectAndDecode(im)
-        return retval
+        text, points, straight_qrcode = det.detectAndDecode(im) # получаем данные о qr с помощью машинного зрения
+        return text # возращаем только текст
 
     def make_gif(self, name='gif', f_number=10):
-        frames = []
+        frames = [] # список кадров
 
         for i in range(1, f_number + 1):
-            f = Image.open(f'gif/{name}-{i}.jpg')
-            f = f.resize((500, 500))
-            frames.append(f)
+            f = Image.open(f'gif/{name}-{i}.jpg') # открываем изображения
+            f = f.resize((500, 500)) # приводим к одному размеру
+            frames.append(f) # добавляем изображения в список
 
         frames[0].save(
             f'{name}.gif',
@@ -53,7 +53,7 @@ class QR_Operation():
             optimize=True,
             duration=500,
             loop=0
-        )
+        ) # сохраняем с нужными параметрами (через параметр duration можно ускорить или замедлить гиф)
 
 '''
 x = QR_Operation()

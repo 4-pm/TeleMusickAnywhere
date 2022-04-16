@@ -44,7 +44,7 @@ def main(message):
         markup.add(find_musick, add_musick)  # добавляем кнопки
         bot.send_message(message.chat.id,  # отправлем сообщение
                          text="Привет, {0.first_name}! Я тестируюсь".format(message.from_user), reply_markup=markup)
-        # все последующие сточки делают тожк-самое,отличаясь кнопками и местоположением пользователя
+        # все последующие сточки делают тоже-самое, отличаясь кнопками и местоположением пользователя
 
     elif (message.text == "Добавить музыку"):
 
@@ -77,7 +77,7 @@ def main(message):
 
     elif (message.text == "Русский") or (message.text == "Английский"):
 
-        users_step[message.from_user.id] = message.text  # поступает Английчский или Русский
+        users_step[message.from_user.id] = message.text  # поступает Английский или Русский
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(back_button)
         bot.send_message(message.chat.id,
@@ -159,7 +159,7 @@ def doc(message):
 @bot.message_handler(content_types=['voice'])  # когда приходит голосовая
 def voice(message):
     if users_step[message.from_user.id] == "Русский":
-        to_speech("ru_RU", message)  # вынес отдельную функцию взаимодействия с классов Эмиля
+        to_speech("ru_RU", message)  # вынес отдельную функцию взаимодействия с классом Эмиля
     elif users_step[message.from_user.id] == "Английский":
         to_speech("eng_ENG", message)
 
