@@ -5,7 +5,7 @@ import requests
 import telebot
 from telebot import types
 
-from Speech_rec import Recognition
+#from Speech_rec import Recognition
 from data import db_session
 from data.songs import Song
 from image_ot_qr import QR_Operation
@@ -165,16 +165,16 @@ def voice(message):
 
 
 def to_speech(lang, message):  # функия для взаимодействия с преобразованием в текст от Эмиля
-    filename = str(message.from_user.id)  # название задается id пользователя (ну они же уникальные?)
-    file_name_full = "nontime/" + filename + ".ogg"  # имя файла
-    file_info = bot.get_file(message.voice.file_id)
-    downloaded_file = bot.download_file(
-        file_info.file_path)  # скачали что-то, возможно бинарный. Леня твой выход, только не сломай
-    with open(file_name_full, 'wb') as new_file:
-        new_file.write(downloaded_file)  # записываем что-то в файл(судя по всему бинарник)
-    voicer = Recognition(file_name_full, lang)
-    voicer = voicer.get_audio_messages()  # собственно колдуем из аудио текст
-    send_message(message.chat.id, voicer, message)
+    #filename = str(message.from_user.id)  # название задается id пользователя (ну они же уникальные?)
+    #file_name_full = "nontime/" + filename + ".ogg"  # имя файла
+    #file_info = bot.get_file(message.voice.file_id)
+    #downloaded_file = bot.download_file(
+        #file_info.file_path)  # скачали что-то, возможно бинарный. Леня твой выход, только не сломай
+    #with open(file_name_full, 'wb') as new_file:
+        #new_file.write(downloaded_file)  # записываем что-то в файл(судя по всему бинарник)
+    #voicer = Recognition(file_name_full, lang)
+    #voicer = voicer.get_audio_messages()  # собственно колдуем из аудио текст
+    send_message(message.chat.id, "В процессе разработки", message)
 
 
 def send_message(chat_id, name, message):  # функция отправки нормального сообщения с песней
