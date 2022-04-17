@@ -5,17 +5,14 @@ import requests
 import telebot
 from telebot import types
 
-#from Speech_rec import Recognition
 from data import db_session
 from data.songs import Song
 from image_ot_qr import QR_Operation
 
-with open("API_KEY", "r") as f:  # Считываем ключ
-    __KEY__ = f.readline()
 
 db_session.global_init("db/musik.db")  # подключаем сессию sqlalchemy
 URL = "https://api.telegram.org/bot"
-bot = telebot.TeleBot(__KEY__)
+bot = telebot.TeleBot(os.environ.get('APIKEY'))
 
 users_step = {}  # словарь статусов пользователей (некий аналог динамического json файла)
 
