@@ -12,7 +12,9 @@ from image_ot_qr import QR_Operation
 
 db_session.global_init("db/musik.db")  # подключаем сессию sqlalchemy
 URL = "https://api.telegram.org/bot"
-bot = telebot.TeleBot(os.environ.get('APIKEY'))
+__KEY__ = os.environ.get('APIKEY')
+bot = telebot.TeleBot(__KEY__)
+#bot = telebot.TeleBot("5303011509:AAHRy7pZJ-V56DkAWAhDzOXCelKGK-69Op0") это вообще левый бот для отладки
 
 users_step = {}  # словарь статусов пользователей (некий аналог динамического json файла)
 
@@ -122,12 +124,12 @@ def image(message):
         elif users_step[message.from_user.id] == "qr":  # тестовое условие декода qr
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            src = 'nontime/' + message.photo[1].file_id + ".png"
+            src = '/tmp/' + message.photo[1].file_id + ".png"
             with open(src, 'wb') as new_file:
                 new_file.write(downloaded_file)
-            dec = QR_Operation("nontime/" + message.photo[1].file_id)
+            dec = QR_Operation("/tmp/" + message.photo[1].file_id)
             text_qr = dec.qr_decode()
-            os.remove("nontime/" + message.photo[1].file_id + ".png")
+            os.remove("/tmp/" + message.photo[1].file_id + ".png")
             # Сюда нужен поиск по id
             bot.send_message(message.chat.id,  # оно работает, осталось сделать поиск по таблице
                              text=text_qr.format(
@@ -163,7 +165,7 @@ def voice(message):
 
 def to_speech(lang, message):  # функия для взаимодействия с преобразованием в текст от Эмиля
     #filename = str(message.from_user.id)  # название задается id пользователя (ну они же уникальные?)
-    #file_name_full = "nontime/" + filename + ".ogg"  # имя файла
+    #file_name_full = "/tmp/" + filename + ".ogg"  # имя файла
     #file_info = bot.get_file(message.voice.file_id)
     #downloaded_file = bot.download_file(
         #file_info.file_path)  # скачали что-то, возможно бинарный. Леня твой выход, только не сломай
