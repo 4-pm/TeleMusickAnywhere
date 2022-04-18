@@ -25,6 +25,9 @@ find_musick = types.KeyboardButton("Найти музыку")
 add_musick = types.KeyboardButton("Добавить музыку")
 other = types.KeyboardButton("Еще")
 user = types.KeyboardButton("Профиль")
+profile_change_photo = types.KeyboardButton("Сменить фон QR")
+profile_change_gif = types.KeyboardButton("Сменить фон GIF")
+profile_statistic = types.KeyboardButton("Статистика")
 adv = types.KeyboardButton("Реклама")
 text = types.KeyboardButton("Текст")
 yes = types.KeyboardButton("Да")
@@ -74,10 +77,40 @@ def main(message):
         users_step[message.from_user.id] = "user"
 
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(profile_change_photo, profile_change_gif, profile_statistic, back_button)
+        bot.send_message(message.chat.id,
+                         text="{0.first_name}, Добро пожаловать в ваш профиль".format(
+                             message.from_user), reply_markup=markup)
+
+    elif (message.text == "Сменить фон QR"):
+        users_step[message.from_user.id] = "profile_change_photo"
+
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(back_button)
         bot.send_message(message.chat.id,
-                         text="{0.first_name}, Профиль будет оформлять Леня".format(
+                         text="{0.first_name}, Скинь фотографию для фона QR".format(
                              message.from_user), reply_markup=markup)
+
+    elif (message.text == "Сменить фон GIF"):
+        users_step[message.from_user.id] = "profile_change_gif"
+
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(back_button)
+        bot.send_message(message.chat.id,
+                         text="{0.first_name}, Скинь фотографию для фона GIF".format(
+                             message.from_user), reply_markup=markup)
+
+    elif (message.text == "Статистика"):
+        users_step[message.from_user.id] = "profile_statistic"
+
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(back_button)
+        bot.send_message(message.chat.id,
+                         text="{0.first_name}, Предоставляю вашу статистику:".format(
+                             message.from_user), reply_markup=markup)
+        bot.send_message(message.chat.id, text=f"Счёт прослушивания: {0}")
+        bot.send_message(message.chat.id, text=f"Счёт добавления: {0}")
+        bot.send_message(message.chat.id, text=f"Счёт рекламы: {0}")
 
     elif (message.text == "Добавить музыку"):
 
@@ -159,6 +192,12 @@ def main(message):
         users_step[message.from_user.id].append(message.text)
         users_step[message.from_user.id][0] = "musick_add-image"
 
+    if users_step[message.from_user.id] == "profile_change_photo":  # статус когда пользователь добавил название песни
+        users_step[message.from_user.id] = ["profile_change_photo"]
+
+    elif users_step[message.from_user.id] == "profile_change_gif":  # статус когда пользователь добавил название песни
+        users_step[message.from_user.id] = ["profile_change_gif"]
+
     print(users_step)
 
 @bot.pre_checkout_query_handler(func=lambda query: True)  # функция проверки прихода оплаты
@@ -202,6 +241,18 @@ def image(message):
                 bot.send_message(message.chat.id,  # оно работает, осталось сделать поиск по таблице
                              text="Извините, ничего не нашлось".format(
                                  message.from_user))
+        elif users_step[message.from_user.id][0] == "profile_change_photo":
+            file = message.photo[-1].file_id  # достаем id фото
+            users_step[message.from_user.id].append(str(file))  # добавляем рядом с шагом
+            users_step[message.from_user.id][0] = "profile_change_photo"  # и ставим следющий шаг
+            # затем записываем в таблицу профиля
+            bot.send_message(message.chat.id, text="{0.first_name}, Фон успешно установлен".format(message.from_user))
+        elif users_step[message.from_user.id][0] == "profile_change_gif":
+            file = message.photo[-1].file_id  # достаем id gif
+            users_step[message.from_user.id].append(str(file))  # добавляем рядом с шагом
+            users_step[message.from_user.id][0] = "profile_change_photo"  # и ставим следющий шаг
+            # затем записываем в таблицу профиля
+            bot.send_message(message.chat.id, text="{0.first_name}, Фон успешно установлен".format(message.from_user))
 
 
 @bot.message_handler(content_types=['audio'])  # при отправке аудио (файл)
