@@ -38,20 +38,33 @@ class QR_Operation():
         text, points, straight_qrcode = det.detectAndDecode(im) # получаем данные о qr с помощью машинного зрения
         return text # возращаем только текст
 
-    def make_gif(self, name='gif', f_number=10):
+    def make_gif(self, name='gif', name_fon='fon'):
+        gif_base = Image.open(f'gif/{name}.jpg')
+        gif_base = gif_base.resize((500, 500))
+        fon = Image.open(f'gif/{name_fon}.jpg')
+        fon = fon.resize((500, 500))
+
         frames = [] # список кадров
 
-        for i in range(1, f_number + 1):
-            f = Image.open(f'gif/{name}-{i}.jpg') # открываем изображения
-            f = f.resize((500, 500)) # приводим к одному размеру
-            frames.append(f) # добавляем изображения в список
+        for i in range(10):
+            gif_base2 = gif_base
+            pixels_gif = gif_base2.load()
+            fon.rotate(36) # вращаем изображение
+            pixels_fon = fon.load()
+
+            for x in range(500):
+                for y in range(500):
+                    if pixels_gif[x, y] == (0, 255, 0):
+                        pixels_gif[x, y] = pixels_fon[x, y]
+
+            frames.append(gif_base2) # добавляем изображения в список
 
         frames[0].save(
             f'{name}.gif',
             save_all=True,
             append_images=frames[1:],
             optimize=True,
-            duration=500,
+            duration=1000,
             loop=0
         ) # сохраняем с нужными параметрами (через параметр duration можно ускорить или замедлить гиф)
 
