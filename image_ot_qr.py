@@ -39,38 +39,41 @@ class QR_Operation():
         return text # возращаем только текст
 
     def make_gif(self, name='gif', name_fon='fon'):
-        gif_base = Image.open(f'gif/{name}.jpg')
+        gif_base = Image.open(f'gif/{name}.png')
         gif_base = gif_base.resize((500, 500))
-        fon = Image.open(f'gif/{name_fon}.jpg')
+        fon = Image.open(f'gif/{name_fon}.png')
         fon = fon.resize((500, 500))
+        pixels_gif = gif_base.load()
+        pixels_fon = fon.load()
 
-        frames = [] # список кадров
+        for x in range(500):
+            for y in range(500):
+                if pixels_gif[x, y] == (0, 255, 0):
+                    pixels_gif[x, y] = pixels_fon[x, y]
 
-        for i in range(10):
-            gif_base2 = gif_base
-            pixels_gif = gif_base2.load()
-            fon.rotate(36) # вращаем изображение
-            pixels_fon = fon.load()
+        frames = [gif_base] # список кадров
 
-            for x in range(500):
-                for y in range(500):
-                    if pixels_gif[x, y] == (0, 255, 0):
-                        pixels_gif[x, y] = pixels_fon[x, y]
+        gif_base.save(f'gif/{name}-2.png')
 
-            frames.append(gif_base2) # добавляем изображения в список
+        for i in range(36):
+            print(i)
+
+            gif_base = Image.open(f'gif/{name}-2.png')
+
+            gif_base = gif_base.rotate(-10) # вращаем изображение
+
+            frames.append(gif_base) # добавляем изображения в список
+
+            gif_base.save(f'gif/{name}-2.png')
 
         frames[0].save(
-            f'{name}.gif',
+            f'gif/{name}.gif',
             save_all=True,
             append_images=frames[1:],
             optimize=True,
-            duration=1000,
+            duration=50,
             loop=0
         ) # сохраняем с нужными параметрами (через параметр duration можно ускорить или замедлить гиф)
 
-'''
-x = QR_Operation()
-x = QR_Operation(input('Your text '), input('File name '))
-print(x.qr_decode(input('File name ')))
-x.im_to_qr(input('Image name '), input('Qr name '))
-x.make_gif(input('Frame names '), int(input('Frame number ')))'''
+x = QR_Operation('base')
+x.make_gif('image_base', 'fon')
