@@ -7,16 +7,17 @@ from telebot import types
 
 from data import db_session
 from data.songs import Song
+from data.profile import User
 from image_ot_qr import QR_Operation
 
 
 db_session.global_init("db/musik.db")  # подключаем сессию sqlalchemy
 URL = "https://api.telegram.org/bot"
 __KEY__ = os.environ.get('APIKEY')
-#__KEY__ = "5303011509:AAHRy7pZJ-V56DkAWAhDzOXCelKGK-69Op0"  # это вообще левый бот для отладки
+__KEY__ = "5381479308:AAF8YYIyWSYHDrvNkF34o-ZUByyAatL-EKI"  # это вообще левый бот для отладки
 bot = telebot.TeleBot(__KEY__)
 PAYMENTS_PROVIDER_TOKEN = os.environ.get('PAYKEY')
-#PAYMENTS_PROVIDER_TOKEN = "381764678:TEST:36167"
+PAYMENTS_PROVIDER_TOKEN = "381764678:TEST:36167"
 
 users_step = {}  # словарь статусов пользователей (некий аналог динамического json файла)
 
@@ -245,13 +246,18 @@ def image(message):
             file = message.photo[-1].file_id  # достаем id фото
             users_step[message.from_user.id].append(str(file))  # добавляем рядом с шагом
             users_step[message.from_user.id][0] = "profile_change_photo"  # и ставим следющий шаг
+            #user = db_session.query(User).filter(User.user_id == message.from_user.id).first()
+            #user.qr_back_image = file
+            #db_session.commit()
             # затем записываем в таблицу профиля
             bot.send_message(message.chat.id, text="{0.first_name}, Фон успешно установлен".format(message.from_user))
         elif users_step[message.from_user.id][0] == "profile_change_gif":
-            file = message.photo[-1].file_id  # достаем id gif
+            file = message.photo[-1].file_id  # достаем id фона gif
             users_step[message.from_user.id].append(str(file))  # добавляем рядом с шагом
             users_step[message.from_user.id][0] = "profile_change_photo"  # и ставим следющий шаг
-            # затем записываем в таблицу профиля
+            #user = db_session.query(User).filter(User.user_id == message.from_user.id).first()
+            #user.qr_back_image = file
+            #db_session.commit()
             bot.send_message(message.chat.id, text="{0.first_name}, Фон успешно установлен".format(message.from_user))
 
 

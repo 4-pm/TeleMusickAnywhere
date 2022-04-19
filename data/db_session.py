@@ -25,6 +25,7 @@ def global_init(db_file):
     __factory = orm.sessionmaker(bind=engine)
 
     from . import songs
+    from . import profile
 
     SqlAlchemyBase.metadata.create_all(engine)
 

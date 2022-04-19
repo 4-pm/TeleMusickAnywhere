@@ -14,5 +14,3 @@ class Song(SqlAlchemyBase):  # класс добавляемойс трочки
     song = sqlalchemy.Column(sqlalchemy.String)  # id песни
     text = sqlalchemy.Column(sqlalchemy.String, index=True)  # текст песни
     author = sqlalchemy.Column(sqlalchemy.String)  # id автора
-
-
