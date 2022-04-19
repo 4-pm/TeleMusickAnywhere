@@ -74,6 +74,3 @@ class QR_Operation():
             duration=50,
             loop=0
         ) # сохраняем с нужными параметрами (через параметр duration можно ускорить или замедлить гиф)
-
-x = QR_Operation('base')
-x.make_gif('image_base', 'fon')
