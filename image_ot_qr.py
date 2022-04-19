@@ -1,4 +1,4 @@
-from PIL import Image, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import cv2 as cv
 
@@ -76,4 +76,17 @@ class QR_Operation():
         ) # сохраняем с нужными параметрами (через параметр duration можно ускорить или замедлить гиф)
 
     def statistic_image(self, text):
-        pass
+        im = Image.new("RGB", (500, 500), (0, 0, 0))
+
+        fnt = ImageFont.truetype("statistic/font/10.12_4_cyr-lat.ttf", 40)
+
+        d = ImageDraw.Draw(im)
+
+        d.multiline_text((10, 10), 
+        f"Ваша статистика\n\n\n\nСчёт прослушивания:{text.split(';')[0]}\n\n\nСчёт добавления:{text.split(';')[1]}\n\n\nСчёт рекламы:{text.split(';')[2]}", 
+        font=fnt, fill=(255, 255, 255))
+
+        im.save("statistic/statistic.jpg")
+
+x = QR_Operation('base')
+x.statistic_image('1;1;1')
