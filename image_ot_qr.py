@@ -74,7 +74,6 @@ class QR_Operation():
             duration=50,
             loop=0
         ) # сохраняем с нужными параметрами (через параметр duration можно ускорить или замедлить гиф)
-
         os.remove(f'pass/{name}-2.png')
 
     def statistic_image(self, user_id, listen_count, add_count, ad_count):

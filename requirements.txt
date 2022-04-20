@@ -3,4 +3,4 @@ Pillow
 qrcode
 opencv-python-headless
 sqlalchemy
-speech_recognition
+SpeechRecognition
