@@ -7,7 +7,7 @@ from telebot import types
 
 from data import db_session
 from data.songs import Song
-from data.profile import User
+from data.profile import Users
 from image_ot_qr import QR_Operation
 
 
@@ -26,8 +26,6 @@ find_musick = types.KeyboardButton("Найти музыку")
 add_musick = types.KeyboardButton("Добавить музыку")
 other = types.KeyboardButton("Еще")
 user = types.KeyboardButton("Профиль")
-profile_change_photo = types.KeyboardButton("Сменить фон QR")
-profile_change_gif = types.KeyboardButton("Сменить фон GIF")
 profile_statistic = types.KeyboardButton("Статистика")
 adv = types.KeyboardButton("Реклама")
 text = types.KeyboardButton("Текст")
@@ -74,31 +72,29 @@ def main(message):
                              #)
 
     elif (message.text == "Профиль"):
+        db_sess = db_session.create_session()
+
+        user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first()
+
+        if user_table == None:
+
+            user_table = Users()
+
+            user_table.user_id = message.from_user.id
+            user_table.listen_statistic = '0'
+            user_table.add_statistic = '0'
+            user_table.ads_statistic = '0'
+            user_table.accaunt_type = 'free'
+            db_sess.add(user_table)
+            db_sess.commit()
+
 
         users_step[message.from_user.id] = "user"
 
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(profile_change_photo, profile_change_gif, profile_statistic, back_button)
+        markup.add(profile_statistic, back_button)
         bot.send_message(message.chat.id,
                          text="{0.first_name}, Добро пожаловать в ваш профиль".format(
-                             message.from_user), reply_markup=markup)
-
-    elif (message.text == "Сменить фон QR"):
-        users_step[message.from_user.id] = "profile_change_photo"
-
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(back_button)
-        bot.send_message(message.chat.id,
-                         text="{0.first_name}, Скинь фотографию для фона QR".format(
-                             message.from_user), reply_markup=markup)
-
-    elif (message.text == "Сменить фон GIF"):
-        users_step[message.from_user.id] = "profile_change_gif"
-
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(back_button)
-        bot.send_message(message.chat.id,
-                         text="{0.first_name}, Скинь фотографию для фона GIF".format(
                              message.from_user), reply_markup=markup)
 
     elif (message.text == "Статистика"):
@@ -109,9 +105,15 @@ def main(message):
         bot.send_message(message.chat.id,
                          text="{0.first_name}, Предоставляю вашу статистику:".format(
                              message.from_user), reply_markup=markup)
-        bot.send_message(message.chat.id, text=f"Счёт прослушивания: {0}")
-        bot.send_message(message.chat.id, text=f"Счёт добавления: {0}")
-        bot.send_message(message.chat.id, text=f"Счёт рекламы: {0}")
+
+        db_sess = db_session.create_session()
+        user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first()
+        make_photo = QR_Operation()
+        make_photo.statistic_image(user_table.user_id, user_table.listen_statistic, user_table.add_statistic, user_table.ads_statistic)
+
+        # Никита, здесь открой и отправь фото(f"pass/statistic-{user_table.user_id}.jpg")
+
+        os.remove(f"pass/statistic-{user_table.user_id}.jpg")
 
     elif (message.text == "Добавить музыку"):
 
@@ -193,12 +195,6 @@ def main(message):
         users_step[message.from_user.id].append(message.text)
         users_step[message.from_user.id][0] = "musick_add-image"
 
-    if users_step[message.from_user.id] == "profile_change_photo":  # статус когда пользователь добавил название песни
-        users_step[message.from_user.id] = ["profile_change_photo"]
-
-    elif users_step[message.from_user.id] == "profile_change_gif":  # статус когда пользователь добавил название песни
-        users_step[message.from_user.id] = ["profile_change_gif"]
-
     print(users_step)
 
 @bot.pre_checkout_query_handler(func=lambda query: True)  # функция проверки прихода оплаты
@@ -223,12 +219,12 @@ def image(message):
         elif users_step[message.from_user.id] == "qr":  # тестовое условие декода qr
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            src = 'tmp/' + message.photo[1].file_id + ".png"
+            src = 'pass/' + message.photo[1].file_id + ".png"
             with open(src, 'wb') as new_file:
                 new_file.write(downloaded_file)
-            dec = QR_Operation("tmp/" + message.photo[1].file_id)
+            dec = QR_Operation("pass/" + message.photo[1].file_id)
             text_qr = dec.qr_decode()
-            os.remove("tmp/" + message.photo[1].file_id + ".png")
+            os.remove("pass/" + message.photo[1].file_id + ".png")
             db_sess = db_session.create_session()
             if text_qr.isdigit():
                 result = list(db_sess.query(Song.gif, Song.song, Song.name).filter(Song.id == int(text_qr)).distinct())
@@ -242,23 +238,6 @@ def image(message):
                 bot.send_message(message.chat.id,  # оно работает, осталось сделать поиск по таблице
                              text="Извините, ничего не нашлось".format(
                                  message.from_user))
-        elif users_step[message.from_user.id][0] == "profile_change_photo":
-            file = message.photo[-1].file_id  # достаем id фото
-            users_step[message.from_user.id].append(str(file))  # добавляем рядом с шагом
-            users_step[message.from_user.id][0] = "profile_change_photo"  # и ставим следющий шаг
-            #user = db_session.query(User).filter(User.user_id == message.from_user.id).first()
-            #user.qr_back_image = file
-            #db_session.commit()
-            # затем записываем в таблицу профиля
-            bot.send_message(message.chat.id, text="{0.first_name}, Фон успешно установлен".format(message.from_user))
-        elif users_step[message.from_user.id][0] == "profile_change_gif":
-            file = message.photo[-1].file_id  # достаем id фона gif
-            users_step[message.from_user.id].append(str(file))  # добавляем рядом с шагом
-            users_step[message.from_user.id][0] = "profile_change_photo"  # и ставим следющий шаг
-            #user = db_session.query(User).filter(User.user_id == message.from_user.id).first()
-            #user.qr_back_image = file
-            #db_session.commit()
-            bot.send_message(message.chat.id, text="{0.first_name}, Фон успешно установлен".format(message.from_user))
 
 
 @bot.message_handler(content_types=['audio'])  # при отправке аудио (файл)

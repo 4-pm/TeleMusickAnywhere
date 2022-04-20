@@ -4,7 +4,7 @@ import cv2 as cv
 
 
 class QR_Operation():
-    def __init__(self, qr_name):
+    def __init__(self, qr_name='qr'):
         self.qr_name = qr_name
 
     def qr_coder(self, text='Pass'): # Никита, что будет здесь? Название или текст?
@@ -75,11 +75,11 @@ class QR_Operation():
             loop=0
         ) # сохраняем с нужными параметрами (через параметр duration можно ускорить или замедлить гиф)
 
-    def statistic_image(self, listen_count, add_count, ad_count):
+    def statistic_image(self, user_id, listen_count, add_count, ad_count):
         im = Image.open('immutable_files/statistic_back_image.png')
         im.resize((500, 500))
 
-        fnt = ImageFont.truetype("immutable_files/font/10.12_4_cyr-lat.ttf", 40)
+        fnt = ImageFont.truetype(f"immutable_files/font/10.12_4_cyr-lat.ttf", 40)
 
         d = ImageDraw.Draw(im)
 
@@ -87,7 +87,4 @@ class QR_Operation():
         f"Ваша статистика\n\n\n\nСчёт прослушивания:{listen_count}\n\n\nСчёт добавления:{add_count}\n\n\nСчёт рекламы:{ad_count}", 
         font=fnt, fill=(255, 255, 255))
 
-        im.save("statistic/statistic.jpg")
-
-x = QR_Operation('base')
-x.statistic_image('1', '1', '1')
+        im.save(f"pass/statistic-{user_id}.jpg")
