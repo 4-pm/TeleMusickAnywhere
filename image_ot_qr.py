@@ -39,7 +39,7 @@ class QR_Operation():
         return text # возращаем только текст
 
     def make_gif(self, name='gif', name_fon='fon'):
-        gif_base = Image.open(f'gif/{name}.png')
+        gif_base = Image.open(f'immutable_files/{name}.png')
         gif_base = gif_base.resize((500, 500))
         fon = Image.open(f'gif/{name_fon}.png')
         fon = fon.resize((500, 500))
@@ -75,18 +75,19 @@ class QR_Operation():
             loop=0
         ) # сохраняем с нужными параметрами (через параметр duration можно ускорить или замедлить гиф)
 
-    def statistic_image(self, text):
-        im = Image.new("RGB", (500, 500), (0, 0, 0))
+    def statistic_image(self, listen_count, add_count, ad_count):
+        im = Image.open('immutable_files/statistic_back_image.png')
+        im.resize((500, 500))
 
-        fnt = ImageFont.truetype("statistic/font/10.12_4_cyr-lat.ttf", 40)
+        fnt = ImageFont.truetype("immutable_files/font/10.12_4_cyr-lat.ttf", 40)
 
         d = ImageDraw.Draw(im)
 
-        d.multiline_text((10, 10), 
-        f"Ваша статистика\n\n\n\nСчёт прослушивания:{text.split(';')[0]}\n\n\nСчёт добавления:{text.split(';')[1]}\n\n\nСчёт рекламы:{text.split(';')[2]}", 
+        d.multiline_text((100, 100), 
+        f"Ваша статистика\n\n\n\nСчёт прослушивания:{listen_count}\n\n\nСчёт добавления:{add_count}\n\n\nСчёт рекламы:{ad_count}", 
         font=fnt, fill=(255, 255, 255))
 
         im.save("statistic/statistic.jpg")
 
 x = QR_Operation('base')
-x.statistic_image('1;1;1')
+x.statistic_image('1', '1', '1')
