@@ -1,6 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import cv2 as cv
+import os
 
 
 class QR_Operation():
@@ -39,9 +40,9 @@ class QR_Operation():
         return text # возращаем только текст
 
     def make_gif(self, name='gif', name_fon='fon'):
-        gif_base = Image.open(f'immutable_files/{name}.png')
+        gif_base = Image.open('immutable_files/image_base.png')
         gif_base = gif_base.resize((500, 500))
-        fon = Image.open(f'gif/{name_fon}.png')
+        fon = Image.open(f'pass/{name_fon}.png')
         fon = fon.resize((500, 500))
         pixels_gif = gif_base.load()
         pixels_fon = fon.load()
@@ -53,18 +54,18 @@ class QR_Operation():
 
         frames = [gif_base] # список кадров
 
-        gif_base.save(f'gif/{name}-2.png')
+        gif_base.save(f'pass/{name}-2.png')
 
         for i in range(36):
             print(i)
 
-            gif_base = Image.open(f'gif/{name}-2.png')
+            gif_base = Image.open(f'pass/{name}-2.png')
 
             gif_base = gif_base.rotate(-10) # вращаем изображение
 
             frames.append(gif_base) # добавляем изображения в список
 
-            gif_base.save(f'gif/{name}-2.png')
+            gif_base.save(f'pass/{name}-2.png')
 
         frames[0].save(
             f'gif/{name}.gif',
@@ -74,6 +75,8 @@ class QR_Operation():
             duration=50,
             loop=0
         ) # сохраняем с нужными параметрами (через параметр duration можно ускорить или замедлить гиф)
+
+        os.remove(f'pass/{name}-2.png')
 
     def statistic_image(self, user_id, listen_count, add_count, ad_count):
         im = Image.open('immutable_files/statistic_back_image.png')

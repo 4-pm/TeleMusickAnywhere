@@ -213,9 +213,14 @@ def image(message):
     if message.from_user.id in users_step:
         # проверка на нахождение в нужом шаге, иначе могут сломать отправив фото в неположеном месте
         if users_step[message.from_user.id][0] == "musick_add-image":
-            file = message.photo[-1].file_id  # достаем id фото
-            users_step[message.from_user.id].append(str(file))  # добавляем рядом с шагом
+            file_photo_id = message.photo[-1].file_id  # достаем id фото
+            users_step[message.from_user.id].append(str(file_photo_id))  # добавляем рядом с шагом
             users_step[message.from_user.id][0] = "musick_add-file"  # и ставим следющий шаг
+            file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            src = 'pass/' + file_photo_id + ".png"
+            with open(src, 'wb') as new_file:
+                new_file.write(downloaded_file)
         elif users_step[message.from_user.id] == "qr":  # тестовое условие декода qr
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             downloaded_file = bot.download_file(file_info.file_path)
@@ -247,11 +252,24 @@ def doc(message):
             file = str(message.audio.file_id)
             mus = Song()  # тут добавление в таблцу происходит
             mus.name = users_step[message.from_user.id][1]  # подробнее смотрите в файле с классом
-            # Леня тут нужна гифка в blob
+
+            first_directory = os.getcwd()
+            os.chdir('gif')
+            gif_in_directory = os.listdir()
+            if len(gif_in_directory) == 0:
+                gif_id = '0'
+            else:
+                gif_in_directory = sorted(gif_in_directory, reverse=True)
+                gif_id = str(int(gif_in_directory[0].split('-')[1].split('.')[0]) + 1)
+            os.chdir(first_directory)
+
+            gif_creator = QR_Operation()
+            gif_creator.make_gif(f'name-{gif_id}', f'pass/{users_step[message.from_user.id][2]}.png')
+
+            # Никит, добавь в таблицу гиф(f'gif/name-{gif_id}.gif')
             mus.gif = users_step[message.from_user.id][3]
             mus.song = file
             mus.text = users_step[message.from_user.id][2]
-            mus.id = message.from_user.id
             db_sess = db_session.create_session()  # собственно сессия
             db_sess.add(mus)  # вначале добавляем в сессию
             db_sess.commit()  # потом комитим обязательно
