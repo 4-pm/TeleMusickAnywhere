@@ -10,11 +10,11 @@ class QR_Operation():
 
     def qr_coder(self, text='Pass'): # Никита, что будет здесь? Название или текст?
         img = qrcode.make(text) # при помощи библиотеки qrcode делаем qr из введённого текста
-        img.save(self.qr_name + '.png') # сохраняем
+        img.save('pass/' + self.qr_name + '-base.png') # сохраняем
 
     def im_to_qr(self, image_name='image'):
         im = Image.open(image_name + '.png') # открываем фоновое изображение(предлагаю изображение, привязанное к пользователю)
-        im2 = Image.open(self.qr_name + '.png') # открываем qr
+        im2 = Image.open('pass/' + self.qr_name + '-base.png') # открываем qr
         x, y = im2.size # получаем размер qr для ресайза изображения пользователя
         pixels_qr = im2.load() # получаем список пикселей изображения
         im = im.resize((x, y)) # приводим изображение к одному размеру с qr
@@ -30,7 +30,7 @@ class QR_Operation():
                         for t in range(-1, 2):
                             if pixels_qr[i + p, j + t] == 0:
                                 pixels_im[i, j] = (255, 255, 255) # делаем окантовку вокруг черных пикселей qr
-        im.save(f"qr_{image_name + '.png'}") # сохраняем
+        im.save(f"qr/{self.qr_name + '.png'}") # сохраняем
 
     def qr_decode(self):
         im = cv.imread(self.qr_name + '.png') # читаем qr

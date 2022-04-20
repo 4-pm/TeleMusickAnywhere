@@ -9,6 +9,7 @@ class Song(SqlAlchemyBase):  # класс добавляемойс трочки
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)  # генерируемый id
     name = sqlalchemy.Column(sqlalchemy.String, index=True)  # название песни
+    photo = sqlalchemy.Column(sqlalchemy.String, index=True)  # изображение песни
     qr = sqlalchemy.Column(sqlalchemy.String)  # ее qr, поменять на блоб
     gif = sqlalchemy.Column(sqlalchemy.String)  # фоточка, тут лежит гифка с диском
     song = sqlalchemy.Column(sqlalchemy.String)  # id песни

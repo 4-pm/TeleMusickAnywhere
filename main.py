@@ -258,17 +258,21 @@ def doc(message):
             os.chdir('gif')
             gif_in_directory = os.listdir()
             if len(gif_in_directory) == 0:
-                gif_id = '0'
+                song_id = '1'
             else:
                 gif_in_directory = sorted(gif_in_directory, reverse=True)
-                gif_id = str(int(gif_in_directory[0].split('-')[1].split('.')[0]) + 1)
+                song_id = str(int(gif_in_directory[0].split('-')[1].split('.')[0]) + 1)
             os.chdir(first_directory)
 
-            gif_creator = QR_Operation()
-            gif_creator.make_gif(f'name-{gif_id}', f'{users_step[message.from_user.id][-1]}')
+            image_creator = QR_Operation(f'qr-{song_id}')
 
-            # Никит, добавь в таблицу гиф(f'gif/name-{gif_id}.gif')
-            mus.gif = users_step[message.from_user.id][3]
+            image_creator.make_gif(f'name-{song_id}', f'{users_step[message.from_user.id][-1]}')
+            image_creator.qr_coder(song_id)
+            image_creator.im_to_qr(f'pass/{users_step[message.from_user.id][-1]}')
+            os.remove(f'pass/qr-{song_id}-base.png')
+
+            mus.gif = f'gif/name-{song_id}.gif'
+            mus.qr = f"qr/'qr-{song_id}.png"
             mus.song = file
             mus.text = users_step[message.from_user.id][2]
             db_sess = db_session.create_session()  # собственно сессия
@@ -276,7 +280,12 @@ def doc(message):
             db_sess.commit()  # потом комитим обязательно
             bot.send_message(message.chat.id,
                              text="Успешно добавлено".format(
-                                 message.from_user))
+                                 message.from_user)) # Никит, отправляй гиф и qr
+
+            db_sess = db_session.create_session()
+            user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first()
+            user_table.add_statistic += str(int(user_table.add_statistic) + 1)
+            db_sess.commit()
 
 
 def send_message(chat_id, name, message):  # функция отправки нормального сообщения с песней
