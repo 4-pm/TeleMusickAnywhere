@@ -57,7 +57,6 @@ class QR_Operation():
         gif_base.save(f'pass/{name}-2.png')
 
         for i in range(36):
-            print(i)
 
             gif_base = Image.open(f'pass/{name}-2.png')
 

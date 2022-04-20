@@ -211,6 +211,7 @@ def payed(message):
 @bot.message_handler(content_types=['photo'])  # тут при отправке фото (не файл)
 def image(message):
     if message.from_user.id in users_step:
+        print(users_step[message.from_user.id][0])
         # проверка на нахождение в нужом шаге, иначе могут сломать отправив фото в неположеном месте
         if users_step[message.from_user.id][0] == "musick_add-image":
             file_photo_id = message.photo[-1].file_id  # достаем id фото
@@ -264,7 +265,7 @@ def doc(message):
             os.chdir(first_directory)
 
             gif_creator = QR_Operation()
-            gif_creator.make_gif(f'name-{gif_id}', f'pass/{users_step[message.from_user.id][2]}.png')
+            gif_creator.make_gif(f'name-{gif_id}', f'{users_step[message.from_user.id][-1]}')
 
             # Никит, добавь в таблицу гиф(f'gif/name-{gif_id}.gif')
             mus.gif = users_step[message.from_user.id][3]
