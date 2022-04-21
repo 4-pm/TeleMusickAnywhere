@@ -49,7 +49,8 @@ class QR_Operation():
 
         for x in range(500):
             for y in range(500):
-                if pixels_gif[x, y] == (0, 255, 0):
+                r, g, b, alpha = pixels_gif[x, y]
+                if r == 0 and g == 0 and b == 0:
                     pixels_gif[x, y] = pixels_fon[x, y]
 
         frames = [gif_base] # список кадров
