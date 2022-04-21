@@ -37,7 +37,7 @@ eng = types.KeyboardButton("Английский")
 rus = types.KeyboardButton("Русский")
 back_button = types.KeyboardButton("Назад")
 qr_button = types.KeyboardButton("QR код")
-
+share = types.KeyboardButton("Поделиться")
 # такая строка отвечает за тип обрабатывваемых
 
 
@@ -63,7 +63,6 @@ def main(message):
             user_table.listen_statistic = '0'
             user_table.add_statistic = '0'
             user_table.ads_statistic = '0'
-            user_table.accaunt_type = 'free'
             db_sess.add(user_table)
             db_sess.commit()
 
@@ -123,7 +122,7 @@ def main(message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(back_button)
         bot.send_message(message.chat.id,
-                         text="{0.first_name}, Скинь сначала название, язык (Русский или Английский), затем фото и потом аудио в виде файла".format(
+                         text="{0.first_name}, Скинь сначала название, текст(можно саму. узнаваемую часть), затем фото и потом аудио в виде файла".format(
                              message.from_user), reply_markup=markup)
 
     elif (message.text == "Найти музыку"):
@@ -169,6 +168,14 @@ def main(message):
         bot.send_message(message.chat.id,
                          text="{0.first_name}, жду qr код".format(message.from_user),
                          reply_markup=markup)
+
+    elif (message.text == "Поделиться"):
+
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(back_button)
+        db_sess = db_session.create_session()
+        result = db_sess.query(Song.qr).filter(Song.name == users_step[message.from_user.id]).first()
+        bot.send_photo(message.chat.id, open(result[0], "rb"))
 
     elif message.text in ("Русский", "Английский") and users_step[message.from_user.id] == "voice":  # Запуск поиска по тексту
         if message.text == "Русский":
@@ -310,33 +317,21 @@ def doc(message):
             image_creator = QR_Operation(f'qr-{song_id}')
 
             image_creator.make_gif(f'name-{song_id}', f'{users_step[message.from_user.id][-1]}') # создаём гиф с диском
+            print(f'name-{song_id}', f'{users_step[message.from_user.id][-1]}')
             image_creator.qr_coder(song_id) # делаем базовый qr
             image_creator.im_to_qr(f'pass/{users_step[message.from_user.id][-1]}') # кастомизируем его
             os.remove(f'pass/qr-{song_id}-base.png')
 
             mus.gif = f'gif/name-{song_id}.gif'
-            mus.qr = f"qr/'qr-{song_id}.png"
+            mus.qr = f"qr/qr-{song_id}.png"
             mus.song = file
-
-            file_info = bot.get_file(file)
-            path = file_info.file_path
-            file_name = "pass/" + os.path.basename(path)
-            print(file_name)
-            doc = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(__APIKEY__, file_info.file_path))
-            with open(file_name, 'wb') as file:
-                file.write(doc.content)
-            x = Recognition(file_name, users_step[message.from_user.id][2])
-            result = x.get_audio_messages()
-
-
-            mus.text = result
+            mus.text = users_step[message.from_user.id][2]
 
             db_sess = db_session.create_session()  # собственно сессия
             db_sess.add(mus)  # вначале добавляем в сессию
             db_sess.commit()  # потом комитим обязательно
-            db_sess = db_session.create_session()
             user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first()
-            user_table.add_statistic += str(int(user_table.add_statistic) + 1)
+            user_table.add_statistic = str(int(user_table.add_statistic) + 1)
             db_sess.commit()
             bot.send_message(message.chat.id,
                              text="Успешно добавлено") # Никит, отправляй гиф и qr
@@ -348,11 +343,18 @@ def send_message(chat_id, name, message):  # функция отправки н�
     result = list(db_sess.query(Song.gif, Song.song).filter(Song.name == name).distinct())  # запрос поиска по названи
     if result:  # если нашли имя
         result = result[0]  # тут был список с кортежем
+        users_step[message.from_user.id] = name
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(back_button, share)
         bot.send_message(message.chat.id,
                          text=name.format(
-                             message.from_user))
+                             message.from_user), reply_markup=markup)
         bot.send_animation(message.chat.id, open(result[0], 'rb'))
         requests.get(f"{URL}{__APIKEY__}/sendAudio?chat_id={chat_id}&audio={result[1]}")
+        db_sess = db_session.create_session()
+        user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first()
+        user_table.add_statistic += str(int(user_table.add_statistic) + 1)
+        db_sess.commit()
     else:
         song = ["", 0]  # макс совпадение по умолчанию
         result = list(db_sess.query(Song.text).distinct())  # все тексты песен
@@ -368,10 +370,17 @@ def send_message(chat_id, name, message):  # функция отправки н�
             Song.text == song[0]).distinct())  # и ищем оставшееся по тексту
         if result:
             result = result[0]
+            users_step[message.from_user.id] = result[2]
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            markup.add(back_button, share)
             bot.send_message(message.chat.id,
-                             text=f"Совпадение {round(song[1], 1) * 100}%")
+                             text=f"Совпадение {round(song[1], 1) * 100}% - {result[2]}", reply_markup=markup)
             bot.send_animation(message.chat.id, open(result[0], 'rb'))
             requests.get(f"{URL}{__APIKEY__}/sendAudio?chat_id={chat_id}&audio={result[1]}")
+            db_sess = db_session.create_session()
+            user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first()
+            user_table.add_statistic += str(int(user_table.add_statistic) + 1)
+            db_sess.commit()
         else:
             bot.send_message(message.chat.id,
                              text="Ничего не нашлось... Добавь эту песню нам в коллекцию")  # ну тут понятно по контексту, если ничего ненашли

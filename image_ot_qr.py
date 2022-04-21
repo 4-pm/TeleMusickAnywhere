@@ -19,10 +19,21 @@ class QR_Operation():
         pixels_qr = im2.load() # получаем список пикселей изображения
         im = im.resize((x, y)) # приводим изображение к одному размеру с qr
         pixels_im = im.load() # получаем список пикселей изображения
-        im.putalpha(115) # меняем прозрачность изображения для черных фотографий, иначе qr будет нечитаем
+        im.putalpha(255)
 
         for i in range(1, x - 1): # проходим циклом по изображению пользователя
             for j in range(1, y - 1):
+                r, g, b, alpha = pixels_im[i, j]
+                r += 100
+                g += 100
+                b += 100
+                if r > 255:
+                    r = 255
+                if g > 255:
+                    g = 255
+                if b > 255:
+                    b = 255
+                pixels_im[i, j] = r, g, b, alpha
                 if pixels_qr[i, j] == 0:
                     pixels_im[i, j] = (0, 0, 0) # перерисовываем черные пиксели c qr на изображение пользователя
                 else:
