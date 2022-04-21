@@ -20,7 +20,8 @@ with open("keys/paykey") as f:
     __PAYKEY__ = f.readline()
 bot = telebot.TeleBot(__APIKEY__)
 
-users_step = {}  # словарь статусов пользователей (некий аналог динамического json файла)
+users_step = {}
+# словарь статусов пользователей (некий аналог динамического json файла)
 
 # кнопки
 find_musick = types.KeyboardButton("Найти музыку")
@@ -37,8 +38,12 @@ rus = types.KeyboardButton("Русский")
 back_button = types.KeyboardButton("Назад")
 qr_button = types.KeyboardButton("QR код")
 
+# такая строка отвечает за тип обрабатывваемых
+
+
 @bot.message_handler(content_types=["text",
-                                    "start"])  # такая строка отвечает за тип обрабатывваемых соосбщений(эта за текст и команду старт)
+                                    "start"])
+# соосбщений(эта за текст и команду старт)
 def main(message):
     if not message.from_user.id in users_step:  # проверка на присутсвие в словаре
         users_step[message.from_user.id] = "home"
