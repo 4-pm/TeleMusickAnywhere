@@ -49,8 +49,7 @@ class QR_Operation():
 
         for x in range(500):
             for y in range(500):
-                r, g, b, alpha = pixels_gif[x, y]
-                if r == 0 and g == 0 and b == 0:
+                if pixels_gif[x, y][1] == 255:
                     pixels_gif[x, y] = pixels_fon[x, y]
 
         frames = [gif_base] # список кадров
@@ -58,7 +57,6 @@ class QR_Operation():
         gif_base.save(f'pass/{name}-2.png')
 
         for i in range(36):
-
             gif_base = Image.open(f'pass/{name}-2.png')
 
             gif_base = gif_base.rotate(-10) # вращаем изображение
