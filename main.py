@@ -49,11 +49,11 @@ def main(message):
 
         db_sess = db_session.create_session()
 
-        user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first()
+        user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first() # проверяем наличие пользователя в бд
 
         if user_table == None:
             user_table = Users()
-
+            # устанавливаем базовые значения
             user_table.user_id = message.from_user.id
             user_table.listen_statistic = '0'
             user_table.add_statistic = '0'
@@ -103,10 +103,13 @@ def main(message):
         user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first()
         make_photo = QR_Operation()
         make_photo.statistic_image(user_table.user_id, user_table.listen_statistic, user_table.add_statistic, user_table.ads_statistic)
+        # рисуем статистику пользователя на специальном фоне
 
         bot.send_photo(message.chat.id, open(f"pass/statistic-{user_table.user_id}.jpg", "rb"))
+        # отправляем статистику
 
-        #os.remove(f"pass/statistic-{user_table.user_id}.jpg")
+        os.remove(f"pass/statistic-{user_table.user_id}.jpg")
+        # удаляем ненужные файлы
 
     elif (message.text == "Добавить музыку"):
 
@@ -250,11 +253,11 @@ def image(message):
             file_photo_id = message.photo[-1].file_id  # достаем id фото
             users_step[message.from_user.id].append(str(file_photo_id))  # добавляем рядом с шагом
             users_step[message.from_user.id][0] = "musick_add-file"  # и ставим следющий шаг
-            file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
-            src = 'pass/' + file_photo_id + ".png"
+            file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id) # получаем файл
+            downloaded_file = bot.download_file(file_info.file_path) # скачиваем его
+            src = 'pass/' + file_photo_id + ".png" # даём имя
             with open(src, 'wb') as new_file:
-                new_file.write(downloaded_file)
+                new_file.write(downloaded_file) # записываем
         elif users_step[message.from_user.id] == "qr":  # тестовое условие декода qr
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             downloaded_file = bot.download_file(file_info.file_path)
@@ -296,14 +299,14 @@ def doc(message):
                 song_id = '1'
             else:
                 gif_in_directory = sorted(gif_in_directory, reverse=True)
-                song_id = str(int(gif_in_directory[0].split('-')[1].split('.')[0]) + 1)
+                song_id = str(int(gif_in_directory[0].split('-')[1].split('.')[0]) + 1) # ищем индекс последней песни
             os.chdir(first_directory)
 
             image_creator = QR_Operation(f'qr-{song_id}')
 
-            image_creator.make_gif(f'name-{song_id}', f'{users_step[message.from_user.id][-1]}')
-            image_creator.qr_coder(song_id)
-            image_creator.im_to_qr(f'pass/{users_step[message.from_user.id][-1]}')
+            image_creator.make_gif(f'name-{song_id}', f'{users_step[message.from_user.id][-1]}') # создаём гиф с диском
+            image_creator.qr_coder(song_id) # делаем базовый qr
+            image_creator.im_to_qr(f'pass/{users_step[message.from_user.id][-1]}') # кастомизируем его
             os.remove(f'pass/qr-{song_id}-base.png')
 
             mus.gif = f'gif/name-{song_id}.gif'
