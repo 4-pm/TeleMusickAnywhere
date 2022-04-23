@@ -12,4 +12,3 @@ class Users(SqlAlchemyBase):  # класс добавляемойс трочки
     listen_statistic = sqlalchemy.Column(sqlalchemy.String)  # статистика пользователя
     add_statistic = sqlalchemy.Column(sqlalchemy.String)  # статистика пользователя
     ads_statistic = sqlalchemy.Column(sqlalchemy.String)  # статистика пользователя
-    accaunt_type = sqlalchemy.Column(sqlalchemy.String)  # тип аккаунта(премиум или бесплатный)

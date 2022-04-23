@@ -47,24 +47,24 @@ share = types.KeyboardButton("Поделиться")
 def main(message):
     if not message.from_user.id in users_step:  # проверка на присутсвие в словаре
         users_step[message.from_user.id] = "home"
-
-    if (message.text == "/start" or message.text == "Назад"):  # выход домой (если нажали старт или назад)
-
-        users_step[message.from_user.id] = "home"  # меняем местонахождение пользователя в словаре
-
         db_sess = db_session.create_session()
 
-        user_table = db_sess.query(Users).filter(Users.user_id == message.from_user.id).first() # проверяем наличие пользователя в бд
+        user_table = db_sess.query(Users).filter(
+            Users.user_id == message.from_user.id).first()  # проверяем наличие пользователя в бд
 
         if user_table == None:
             user_table = Users()
             # устанавливаем базовые значения
-            user_table.user_id = message.from_user.id
+            user_table.user_id = message.chat.id
             user_table.listen_statistic = '0'
             user_table.add_statistic = '0'
             user_table.ads_statistic = '0'
             db_sess.add(user_table)
             db_sess.commit()
+
+    if (message.text == "/start" or message.text == "Назад"):  # выход домой (если нажали старт или назад)
+
+        users_step[message.from_user.id] = "home"  # меняем местонахождение пользователя в словаре
 
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)  # стиль кнопок
         markup.add(find_musick, add_musick, other)  # добавляем кнопки
@@ -196,7 +196,7 @@ def main(message):
         db_sess = db_session.create_session()
         result = list(db_sess.query(Song.photo, Song.song, Song.name).filter(Song.name == message.text).distinct())
         if result:
-            users_step[message.from_user.id] = "check_for_adv"
+            users_step[message.from_user.id] = ["check_for_adv"] + list(result[0])
             result = result[0]
             requests.get(f'{URL}{__APIKEY__}/sendPhoto?chat_id={message.chat.id}&photo={result[0]}&caption={result[2]}')
             requests.get(f"{URL}{__APIKEY__}/sendAudio?chat_id={message.chat.id}&audio={result[1]}")
@@ -209,7 +209,7 @@ def main(message):
             bot.send_message(message.chat.id,  # оно работает, осталось сделать поиск по таблице
                              text="Извините, ничего не нашлось")
 
-    elif users_step[message.from_user.id] == "check_for_adv" and (message.text == "Да"):
+    elif users_step[message.from_user.id][0] == "check_for_adv" and (message.text == "Да"):
         musik_adv = types.LabeledPrice(label='Реклама песни', amount=10000)
         if __PAYKEY__.split(':')[1] == 'TEST':
             bot.send_invoice(message.chat.id, title="Оплата", description=f"Реклама среди пользователей",
@@ -253,7 +253,12 @@ def checkout(pre_checkout_query):
 @bot.message_handler(content_types=['successful_payment'])  # при успешной оплате
 def payed(message):
     bot.send_message(message.chat.id, "Спасибо за покупку")
-    # Нужно добавить рассылку рекламы
+    db_sess = db_session.create_session()
+    result = list(db_sess.query(Users.user_id).distinct())[0]
+    names = users_step[message.from_user.id][1:]
+    for i in result:
+        requests.get(f'{URL}{__APIKEY__}/sendPhoto?chat_id={i}&photo={names[0]}&caption=Спонсорская песня: {names[2]}')
+        requests.get(f"{URL}{__APIKEY__}/sendAudio?chat_id={i}&audio={names[1]}")
 
 
 @bot.message_handler(content_types=['photo'])  # тут при отправке фото (не файл)
@@ -303,6 +308,7 @@ def doc(message):
             file = str(message.audio.file_id)
             mus = Song()  # тут добавление в таблцу происходит
             mus.name = users_step[message.from_user.id][1]  # подробнее смотрите в файле с классом
+            mus.photo = users_step[message.from_user.id][3]
 
             first_directory = os.getcwd()
             os.chdir('gif')
@@ -326,6 +332,7 @@ def doc(message):
             mus.qr = f"qr/qr-{song_id}.png"
             mus.song = file
             mus.text = users_step[message.from_user.id][2]
+            mus.author = message.from_user.id
 
             db_sess = db_session.create_session()  # собственно сессия
             db_sess.add(mus)  # вначале добавляем в сессию
@@ -360,7 +367,7 @@ def send_message(chat_id, name, message):  # функция отправки н�
         result = list(db_sess.query(Song.text).distinct())  # все тексты песен
         for i in result:
             i = i[0]
-            s = SequenceMatcher(lambda x: x == " ", name, i)  # функция ищащая пересечения в проц. соотношении
+            s = SequenceMatcher(lambda x: x == " ", name, i)  # функция ищющая пересечения в проц. соотношении
             s = s.ratio()
             if s > song[1]:  # отбираем макс.
                 song[1] = s
